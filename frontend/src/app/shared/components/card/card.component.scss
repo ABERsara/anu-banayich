@@ -1,0 +1,33 @@
+@use '../../../../styles/variables' as *;
+
+.card {
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  overflow: hidden;
+
+  &--elevated {
+    box-shadow: $shadow-md;
+    border-color: transparent;
+  }
+
+  &__header {
+    padding: $spacing-lg $spacing-lg 0;
+  }
+
+  &__title {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    margin: 0 0 $spacing-xs;
+  }
+
+  &__subtitle {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    margin: 0;
+  }
+
+  &__body {
+    padding: $spacing-lg;
+  }
+}

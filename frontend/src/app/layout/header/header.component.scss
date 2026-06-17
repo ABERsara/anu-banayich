@@ -1,0 +1,42 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: $color-bg;
+  border-bottom: 1px solid $color-border;
+  box-shadow: $shadow-sm;
+
+  &__inner {
+    @include flex-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 $spacing-xl;
+    height: 64px;
+  }
+
+  &__logo {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-primary;
+    text-decoration: none;
+  }
+
+  &__nav {
+    display: flex;
+    gap: $spacing-lg;
+
+    a {
+      color: $color-text-muted;
+      font-weight: $font-weight-medium;
+      text-decoration: none;
+      transition: color $transition-fast;
+
+      &:hover, &.active {
+        color: $color-primary;
+      }
+    }
+  }
+}

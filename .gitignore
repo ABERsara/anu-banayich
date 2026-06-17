@@ -1,0 +1,45 @@
+# ─── Python ───────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+.env
+!.env.example
+*.db
+*.sqlite3
+
+# ─── FastAPI / Alembic ────────────────────────────
+alembic/versions/*.py
+!alembic/versions/.gitkeep
+
+# ─── Node / Angular ───────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+*.js.map
+
+# ─── OS ───────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── IDEs ─────────────────────────────────────────
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ─── Misc ─────────────────────────────────────────
+*.log
+*.lock
+!package-lock.json

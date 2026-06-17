@@ -1,0 +1,29 @@
+@use '../../../styles/variables' as *;
+
+.home {
+  padding: $spacing-2xl 0;
+  text-align: center;
+
+  &__title {
+    font-size: $font-size-2xl * 1.5;
+    margin-bottom: $spacing-md;
+  }
+
+  &__subtitle {
+    color: $color-text-muted;
+    font-size: $font-size-lg;
+    margin-bottom: $spacing-2xl;
+  }
+
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: $spacing-lg;
+    text-align: left;
+  }
+}
+
+.card-actions {
+  padding: $spacing-md $spacing-lg $spacing-lg;
+  border-top: 1px solid $color-border;
+}

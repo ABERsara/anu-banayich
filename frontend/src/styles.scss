@@ -1,0 +1,40 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  font-size: $font-size-base;
+  color: $color-text;
+  background-color: $color-bg;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 $spacing-md;
+  font-weight: $font-weight-bold;
+  line-height: 1.3;
+}
+
+p {
+  margin: 0 0 $spacing-md;
+  line-height: 1.6;
+}
