@@ -22,11 +22,12 @@ import { RouterLink } from '@angular/router';
 
 import { ForumPost } from '../../../core/models';
 import { ForumService } from '../../../core/services/forum.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-forum-list',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe],
   template: `
     <div style="padding: 1rem; direction: rtl">
       <div style="display: flex; justify-content: space-between; align-items: center">
