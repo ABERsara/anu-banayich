@@ -29,6 +29,8 @@ export class FileUploadComponent {
     const file = input.files?.[0];
     if (!file) return;
 
+    this.validationError.emit('');
+
     if (file.size / 1024 / 1024 > this.maxSizeMb()) {
       this.validationError.emit(`הקובץ גדול מדי. הגודל המקסימלי הוא ${this.maxSizeMb()} MB`);
       input.value = '';
