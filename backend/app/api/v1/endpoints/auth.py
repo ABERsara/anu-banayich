@@ -48,21 +48,19 @@ def verify_otp(data: OtpVerifyRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(data: LoginRequest, db: Session = Depends(get_db)):
+def login(data: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     """
     Login with email + password.
 
     Returns JWT access_token (15 min) + refresh_token (7 days).
     """
-    # TODO: call auth_service.login(db, data) and return the result
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+    return auth_service.login(db, data)
 
 
 @router.post("/refresh", response_model=TokenResponse)
-def refresh(data: RefreshRequest, db: Session = Depends(get_db)):
+def refresh(data: RefreshRequest, db: Session = Depends(get_db)) -> TokenResponse:
     """Issue a new access token using a valid refresh token."""
-    # TODO: call auth_service.refresh_token(db, data.refresh_token)
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+    return auth_service.refresh_token(db, data.refresh_token)
 
 
 @router.post("/resend-otp")

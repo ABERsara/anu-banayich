@@ -14,7 +14,8 @@ import random
 import string
 from datetime import UTC, datetime, timedelta
 
-from jose import jwt
+from jose import JWTError, jwt
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -66,33 +67,29 @@ def verify_otp(db: Session, email: str, otp_code: str) -> User:
 
 
 def login(db: Session, data: LoginRequest) -> TokenResponse:
-    """
-    Authenticate user and return JWT tokens.
-
-    TODO:
-      1. Find user by email
-      2. Verify password with verify_password()
-      3. Check account_status == ACTIVE (raise 403 otherwise)
-      4. Create access token (15 min) and refresh token (7 days)
-      5. Return TokenResponse
-    """
-    # TODO: implement this function
-    raise NotImplementedError("login() is not yet implemented")
+    user = db.query(User).filter(User.email == data.email).first()
+    if not user or not verify_password(data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="אימות נכשל. בדקי מייל וסיסמה.")
+    if user.account_status != AccountStatus.ACTIVE:
+        raise HTTPException(status_code=403, detail="החשבון אינו פעיל. פנה/י למנהל.")
+    access = _create_token(user.id, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), "access")
+    refresh = _create_token(user.id, timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS), "refresh")
+    return TokenResponse(access_token=access, refresh_token=refresh, token_type="bearer")
 
 
 def refresh_token(db: Session, refresh_tok: str) -> TokenResponse:
-    """
-    Issue new access token using a valid refresh token.
-
-    TODO:
-      1. Decode the refresh JWT
-      2. Verify it has type="refresh"
-      3. Load user from DB, verify still ACTIVE
-      4. Issue new access token
-      5. Return TokenResponse (can reuse same refresh token)
-    """
-    # TODO: implement this function
-    raise NotImplementedError("refresh_token() is not yet implemented")
+    try:
+        payload = jwt.decode(refresh_tok, settings.SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=401, detail="טוקן רענון לא תקין.")
+    if payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="טוקן רענון לא תקין.")
+    user_id: str | None = payload.get("sub")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or user.account_status != AccountStatus.ACTIVE:
+        raise HTTPException(status_code=401, detail="טוקן רענון לא תקין.")
+    access = _create_token(user.id, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), "access")
+    return TokenResponse(access_token=access, refresh_token=refresh_tok, token_type="bearer")
 
 
 def resend_otp(db: Session, email: str) -> None:
