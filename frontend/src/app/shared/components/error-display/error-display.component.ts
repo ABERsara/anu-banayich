@@ -6,6 +6,7 @@ import { Component, input } from '@angular/core';
   template: `
     @if (message()) {
       <div class="error-display" role="alert" dir="rtl">
+        <span class="error-icon" aria-hidden="true">⚠</span>
         <span>{{ message() }}</span>
       </div>
     }
