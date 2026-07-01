@@ -4,11 +4,11 @@
  * Manages login, registration, JWT storage, and current user state.
  *
  * TODO list for junior developer:
- *   [ ] implement register() – POST /auth/register
- *   [ ] implement verifyOtp() – POST /auth/verify-otp
- *   [ ] implement login() – POST /auth/login, save tokens, load profile
- *   [ ] implement logout() – clear tokens
- *   [ ] implement refreshToken() – call /auth/refresh on 401
+ *   [x] implement register() – POST /auth/register
+ *   [x] implement verifyOtp() – POST /auth/verify-otp
+ *   [x] implement login() – POST /auth/login, save tokens, load profile
+ *   [x] implement logout() – clear tokens
+ *   [x] implement refreshToken() – call /auth/refresh on 401
  */
 
 import { Injectable, computed, inject, signal } from '@angular/core';
@@ -75,7 +75,9 @@ export class AuthService {
     return this.api.post<TokenResponse>('/auth/login', data).pipe(
       tap((tokens) => {
         this.saveTokens(tokens);
-        this.loadCurrentUser().subscribe();
+        this.loadCurrentUser().subscribe({
+          error: () => this.clearTokens(),
+        });
       }),
     );
   }
