@@ -88,7 +88,7 @@ def verify_otp(db: Session, email: str, otp_code: str) -> User:
 def login(db: Session, data: LoginRequest) -> TokenResponse:
     user = db.query(User).filter(User.email == data.email).first()
     if not user or not verify_password(data.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="אימות נכשל. בדקי מייל וסיסמה.")
+        raise HTTPException(status_code=401, detail="אימות נכשל. בדוק/י מייל וסיסמה.")
     if user.account_status != AccountStatus.ACTIVE:
         raise HTTPException(status_code=403, detail="החשבון אינו פעיל. פנה/י למנהל.")
     access = _create_token(user.id, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), "access")
