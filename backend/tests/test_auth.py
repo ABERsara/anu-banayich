@@ -1,13 +1,16 @@
 """
-Integration tests for auth endpoints: register, verify_otp, resend_otp.
+Integration tests for auth endpoints: register, verify_otp, resend_otp, login, refresh.
 
 Each test runs against an isolated in-memory SQLite DB (see conftest.py).
 """
 
 from datetime import UTC, datetime, timedelta
 
-import pytest
+from jose import jwt as jose_jwt
 
+from app.core.config import settings
+from app.core.constants import AccountStatus
+from app.core.security import ALGORITHM
 from app.models.user import User
 
 BASE = "/api/v1/auth"
@@ -201,3 +204,92 @@ class TestResendOtp:
         await client.post(f"{BASE}/verify-otp", json={"email": VALID_PAYLOAD["email"], "otp_code": otp})
         r = await client.post(f"{BASE}/resend-otp", params={"email": VALID_PAYLOAD["email"]})
         assert r.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# login
+# ---------------------------------------------------------------------------
+
+class TestLogin:
+    EMAIL = "login@example.com"
+    PASSWORD = "Pass1234!"
+    URL = f"{BASE}/login"
+
+    async def test_active_user_returns_200(self, client, make_active_user):
+        make_active_user(self.EMAIL, self.PASSWORD)
+        r = await client.post(self.URL, json={"email": self.EMAIL, "password": self.PASSWORD})
+        assert r.status_code == 200
+
+    async def test_response_has_all_token_fields(self, client, make_active_user):
+        make_active_user(self.EMAIL, self.PASSWORD)
+        r = await client.post(self.URL, json={"email": self.EMAIL, "password": self.PASSWORD})
+        body = r.json()
+        assert "access_token" in body
+        assert "refresh_token" in body
+        assert body["token_type"] == "bearer"
+
+    async def test_wrong_password_returns_401(self, client, make_active_user):
+        make_active_user(self.EMAIL, self.PASSWORD)
+        r = await client.post(self.URL, json={"email": self.EMAIL, "password": "WrongPass!"})
+        assert r.status_code == 401
+
+    async def test_missing_email_returns_401(self, client):
+        r = await client.post(self.URL, json={"email": "nobody@example.com", "password": self.PASSWORD})
+        assert r.status_code == 401
+
+    async def test_wrong_password_same_message_as_missing_user(self, client, make_active_user):
+        """User enumeration protection: identical 401 for wrong password and unknown email."""
+        make_active_user(self.EMAIL, self.PASSWORD)
+        r_wrong = await client.post(self.URL, json={"email": self.EMAIL, "password": "WrongPass!"})
+        r_missing = await client.post(self.URL, json={"email": "nobody@example.com", "password": self.PASSWORD})
+        assert r_wrong.status_code == r_missing.status_code == 401
+        assert r_wrong.json()["detail"] == r_missing.json()["detail"]
+
+    async def test_inactive_user_returns_403(self, client, db_session, make_active_user):
+        user = make_active_user(self.EMAIL, self.PASSWORD)
+        user.account_status = AccountStatus.PENDING_OTP
+        db_session.commit()
+        r = await client.post(self.URL, json={"email": self.EMAIL, "password": self.PASSWORD})
+        assert r.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# refresh_token
+# ---------------------------------------------------------------------------
+
+class TestRefreshToken:
+    EMAIL = "refresh@example.com"
+    PASSWORD = "Pass1234!"
+    LOGIN_URL = f"{BASE}/login"
+    REFRESH_URL = f"{BASE}/refresh"
+
+    async def _login(self, client, make_active_user) -> dict:
+        make_active_user(self.EMAIL, self.PASSWORD)
+        r = await client.post(self.LOGIN_URL, json={"email": self.EMAIL, "password": self.PASSWORD})
+        return r.json()  # type: ignore[no-any-return]
+
+    async def test_valid_refresh_returns_200(self, client, make_active_user):
+        tokens = await self._login(client, make_active_user)
+        r = await client.post(self.REFRESH_URL, json={"refresh_token": tokens["refresh_token"]})
+        assert r.status_code == 200
+
+    async def test_valid_refresh_returns_valid_access_token(self, client, make_active_user):
+        tokens = await self._login(client, make_active_user)
+        r = await client.post(self.REFRESH_URL, json={"refresh_token": tokens["refresh_token"]})
+        payload = jose_jwt.decode(r.json()["access_token"], settings.SECRET_KEY, algorithms=[ALGORITHM])
+        assert payload.get("type") == "access"
+
+    async def test_valid_refresh_same_refresh_token_returned(self, client, make_active_user):
+        tokens = await self._login(client, make_active_user)
+        r = await client.post(self.REFRESH_URL, json={"refresh_token": tokens["refresh_token"]})
+        assert r.json()["refresh_token"] == tokens["refresh_token"]
+
+    async def test_invalid_token_returns_401(self, client):
+        r = await client.post(self.REFRESH_URL, json={"refresh_token": "not.a.valid.token"})
+        assert r.status_code == 401
+
+    async def test_access_token_as_refresh_returns_401(self, client, make_active_user):
+        """Type check: access tokens must not be accepted as refresh tokens."""
+        tokens = await self._login(client, make_active_user)
+        r = await client.post(self.REFRESH_URL, json={"refresh_token": tokens["access_token"]})
+        assert r.status_code == 401

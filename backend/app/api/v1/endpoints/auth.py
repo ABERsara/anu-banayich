@@ -8,10 +8,11 @@ POST /auth/refresh       – refresh access token
 POST /auth/resend-otp    – resend OTP
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
+from app.models.user import User
 from app.schemas.auth import (
     LoginRequest,
     OtpVerifyRequest,
@@ -26,7 +27,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register", response_model=UserProfile, status_code=status.HTTP_201_CREATED)
-def register(data: RegisterRequest, db: Session = Depends(get_db)):
+def register(data: RegisterRequest, db: Session = Depends(get_db)) -> User:
     """
     Submit a new registration request.
 
@@ -37,7 +38,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/verify-otp", response_model=UserProfile)
-def verify_otp(data: OtpVerifyRequest, db: Session = Depends(get_db)):
+def verify_otp(data: OtpVerifyRequest, db: Session = Depends(get_db)) -> User:
     """
     Verify the OTP received by email.
 
@@ -63,7 +64,7 @@ def refresh(data: RefreshRequest, db: Session = Depends(get_db)) -> TokenRespons
 
 
 @router.post("/resend-otp", status_code=status.HTTP_200_OK)
-def resend_otp(email: str, db: Session = Depends(get_db)):
+def resend_otp(email: str, db: Session = Depends(get_db)) -> dict[str, str]:
     """Resend OTP to the given email."""
     auth_service.resend_otp(db, email)
     # PROD: deviates from spec — spec defines "קוד OTP חדש נשלח.", message changed for consistency with other project messages. Reconsider before PROD.

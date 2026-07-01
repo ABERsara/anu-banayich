@@ -6,8 +6,8 @@ Handles registration, OTP, login, JWT issuance.
 TODO list for junior developer:
   [ ] implement register() – create user, hash password, send OTP
   [ ] implement verify_otp() – compare code, mark pending_approval
-  [ ] implement login() – verify password, issue JWT pair
-  [ ] implement refresh_token() – validate refresh JWT, issue new access token
+  [x] implement login() – verify password, issue JWT pair
+  [x] implement refresh_token() – validate refresh JWT, issue new access token
 """
 
 import random
@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.constants import AccountStatus, UserRole
-from app.core.security import ALGORITHM, get_password_hash
+from app.core.security import ALGORITHM, get_password_hash, verify_password
 from app.models.user import User
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 from app.services.email_service import send_otp_email
@@ -33,7 +33,7 @@ def _generate_otp(length: int = 6) -> str:
 def _create_token(subject: str, expires_delta: timedelta, token_type: str = "access") -> str:
     expire = datetime.now(UTC) + expires_delta
     payload = {"sub": subject, "exp": expire, "type": token_type}
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
+    return str(jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM))
 
 
 def register(db: Session, data: RegisterRequest) -> User:
@@ -100,7 +100,7 @@ def refresh_token(db: Session, refresh_tok: str) -> TokenResponse:
     try:
         payload = jwt.decode(refresh_tok, settings.SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
-        raise HTTPException(status_code=401, detail="טוקן רענון לא תקין.")
+        raise HTTPException(status_code=401, detail="טוקן רענון לא תקין.") from None
     if payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="טוקן רענון לא תקין.")
     user_id: str | None = payload.get("sub")
