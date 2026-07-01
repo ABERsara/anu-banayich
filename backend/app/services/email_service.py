@@ -28,9 +28,11 @@ def send_otp_email(email: str, otp_code: str) -> None:
 
     html = (
         f'<div dir="rtl">'
-        f"<h2>קוד האימות שלך</h2>"
+        f"<p>שלום,</p>"
+        f"<p>ברוך הבא ל-{settings.PROJECT_NAME}. הנה קוד האימות שלך:</p>"
         f"<h1>{otp_code}</h1>"
-        f"<p>הקוד בתוקף ל-{settings.OTP_EXPIRE_MINUTES} דקות.</p>"
+        f"<p>הקוד תקף ל-{settings.OTP_EXPIRE_MINUTES} דקות.</p>"
+        f"<p>לא נרשמת? פשוט התעלם מהמייל הזה.</p>"
         f"</div>"
     )
     # PROD: single MIMEText, no MIMEMultipart("alternative") — there's no plain-text
