@@ -13,7 +13,6 @@ TODO (when ready for production):
 
 import logging
 import smtplib
-from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from app.core.config import settings
@@ -27,10 +26,6 @@ def send_otp_email(email: str, otp_code: str) -> None:
         logger.info(f"[DEV EMAIL] OTP {otp_code} -> {email}")
         return
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "קוד אימות"
-    msg["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM}>"
-    msg["To"] = email
     html = (
         f'<div dir="rtl">'
         f"<h2>קוד האימות שלך</h2>"
@@ -38,7 +33,12 @@ def send_otp_email(email: str, otp_code: str) -> None:
         f"<p>הקוד בתוקף ל-{settings.OTP_EXPIRE_MINUTES} דקות.</p>"
         f"</div>"
     )
-    msg.attach(MIMEText(html, "html", "utf-8"))
+    # PROD: single MIMEText, no MIMEMultipart("alternative") — there's no plain-text
+    # alternative to choose between yet. Add one back if a plain-text fallback is added.
+    msg = MIMEText(html, "html", "utf-8")
+    msg["Subject"] = "קוד אימות"
+    msg["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM}>"
+    msg["To"] = email
 
     try:
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as s:
