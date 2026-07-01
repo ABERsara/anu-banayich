@@ -104,6 +104,8 @@ def refresh_token(db: Session, refresh_tok: str) -> TokenResponse:
     if payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="טוקן רענון לא תקין.")
     user_id: str | None = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="טוקן רענון לא תקין.")
     user = db.query(User).filter(User.id == user_id).first()
     if not user or user.account_status != AccountStatus.ACTIVE:
         raise HTTPException(status_code=401, detail="טוקן רענון לא תקין.")
