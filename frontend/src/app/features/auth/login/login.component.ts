@@ -20,17 +20,71 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { ErrorDisplayComponent } from '../../../shared/components/error-display/error-display.component';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+import { LoginRequest } from '../../../core/models';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, ErrorDisplayComponent, LoadingSpinnerComponent],
+  styleUrl: './login.component.scss',
   template: `
-    <!-- TODO: replace with real template -->
-    <div style="padding: 2rem; text-align: center; direction: rtl">
-      <h1>כניסה למערכת</h1>
-      <p>TODO: implement login form</p>
-      <p><a routerLink="/register">אין לך חשבון? הירשם/י כאן</a></p>
+    <div class="login-page" dir="rtl">
+      <div class="login-card">
+        <h1 class="login-title">כניסה למערכת</h1>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+          <div class="form-field">
+            <label for="email">אימייל</label>
+            <input
+              id="email"
+              type="email"
+              dir="ltr"
+              formControlName="email"
+              autocomplete="email"
+              placeholder="your@email.com"
+            />
+            @if (form.controls.email.invalid && form.controls.email.touched) {
+              <span class="field-error">נא להזין כתובת אימייל תקינה</span>
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="password">סיסמה</label>
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              autocomplete="current-password"
+              placeholder="סיסמה"
+            />
+            @if (form.controls.password.invalid && form.controls.password.touched) {
+              <span class="field-error">נא להזין סיסמה</span>
+            }
+          </div>
+
+          <app-error-display [message]="errorMessage" />
+
+          @if (isLoading) {
+            <app-loading-spinner message="מתחברת..." />
+          }
+
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="form.invalid || isLoading"
+          >
+            כניסה
+          </button>
+
+        </form>
+
+        <p class="register-link">
+          אין לך חשבון? <a routerLink="/register">הירשמי כאן</a>
+        </p>
+      </div>
     </div>
   `,
 })
@@ -53,13 +107,15 @@ export class LoginComponent {
     this.isLoading = true;
     this.errorMessage = '';
 
-    // TODO: implement
-    // this.auth.login(this.form.value as LoginRequest).subscribe({
-    //   next: () => this.router.navigate(['/forum']),
-    //   error: (err) => {
-    //     this.errorMessage = err.error?.detail ?? 'שגיאה בכניסה. בדקי את הפרטים.';
-    //     this.isLoading = false;
-    //   },
-    // });
+    this.auth.login(this.form.getRawValue() as LoginRequest).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.router.navigate(['/home']);
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.detail ?? 'שגיאה בכניסה. בדקי את הפרטים.';
+        this.isLoading = false;
+      },
+    });
   }
 }
