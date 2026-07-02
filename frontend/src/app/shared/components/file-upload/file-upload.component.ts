@@ -2,13 +2,14 @@ import { Component, DestroyRef, inject, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-file-upload',
+  standalone: true,
   templateUrl: './file-upload.component.html',
   styleUrl: './file-upload.component.scss',
 })
 export class FileUploadComponent {
   accept = input<string>('image/*,.pdf');
   maxSizeMb = input<number>(5);
-  label = input<string>('בחר קובץ');
+  label = input<string>('בחרי קובץ');
 
   fileSelected = output<File>();
   validationError = output<string>();
@@ -30,14 +31,13 @@ export class FileUploadComponent {
     if (!file) return;
 
     this.validationError.emit('');
+    this.clearPreview();
 
     if (file.size / 1024 / 1024 > this.maxSizeMb()) {
       this.validationError.emit(`הקובץ גדול מדי. הגודל המקסימלי הוא ${this.maxSizeMb()} MB`);
       input.value = '';
       return;
     }
-
-    this.clearPreview();
 
     if (file.type.startsWith('image/')) {
       this.previewUrl = URL.createObjectURL(file);

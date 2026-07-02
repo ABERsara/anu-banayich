@@ -67,6 +67,27 @@ describe('FileUploadComponent', () => {
 
       expect(spy.mock.calls[0][0]).toBe('');
     });
+
+    it('should clear previous preview when the next file exceeds maxSizeMb', () => {
+      vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake-url');
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+
+      triggerChange(fixture, makeFile('valid.jpg', 'image/jpeg', 2));
+      expect(component.previewUrl).toBe('blob:fake-url');
+
+      triggerChange(fixture, makeFile('big.jpg', 'image/jpeg', 6));
+
+      expect(component.previewUrl).toBeNull();
+    });
+
+    it('should clear previous filename when the next file exceeds maxSizeMb', () => {
+      triggerChange(fixture, makeFile('document.pdf', 'application/pdf', 1));
+      expect(component.selectedFileName).toBe('document.pdf');
+
+      triggerChange(fixture, makeFile('big.jpg', 'image/jpeg', 6));
+
+      expect(component.selectedFileName).toBeNull();
+    });
   });
 
   // ---------------------------------------------------------------------------
