@@ -38,7 +38,7 @@ def send_otp_email(email: str, otp_code: str) -> None:
     # PROD: single MIMEText, no MIMEMultipart("alternative") — there's no plain-text
     # alternative to choose between yet. Add one back if a plain-text fallback is added.
     msg = MIMEText(html, "html", "utf-8")
-    msg["Subject"] = "קוד אימות"
+    msg["Subject"] = 'קוד אימות – עמותת "אנו בניך"'
     msg["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM}>"
     msg["To"] = email
 
@@ -50,6 +50,9 @@ def send_otp_email(email: str, otp_code: str) -> None:
             s.send_message(msg)
     except Exception as exc:
         logger.error(f"[EMAIL] Failed to send OTP email to {email}: {exc}")
+        return
+
+    logger.info(f"[EMAIL] OTP sent → {email}")
 
 
 def send_approval_email(email: str, first_name: str) -> None:
